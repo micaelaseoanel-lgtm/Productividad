@@ -143,7 +143,16 @@ let unsubscribeSnapshot = null;
 
 function signInWithGoogle() {
   const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithRedirect(provider);
+  authError = null;
+  auth.signInWithPopup(provider).catch((err) => {
+    if (err.code === "auth/popup-blocked" || err.code === "auth/operation-not-supported-in-this-environment") {
+      auth.signInWithRedirect(provider);
+      return;
+    }
+    if (err.code === "auth/popup-closed-by-user" || err.code === "auth/cancelled-popup-request") return;
+    authError = `${err.code || ""} ${err.message || err}`.trim();
+    render();
+  });
 }
 function signOut() {
   if (unsubscribeSnapshot) { unsubscribeSnapshot(); unsubscribeSnapshot = null; }
