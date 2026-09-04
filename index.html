@@ -162,11 +162,18 @@ function attachCloudSync(user) {
     render();
   }, (err) => console.error("Error de sincronización:", err));
 }
-auth.getRedirectResult().catch((err) => console.error("Error de login:", err));
+let authError = null;
+auth.getRedirectResult().then((result) => {
+  if (result && result.user) authError = null;
+}).catch((err) => {
+  authError = `${err.code || ""} ${err.message || err}`.trim();
+  render();
+});
 auth.onAuthStateChanged((user) => {
   if (user) {
     currentUser = user;
     authState = "signed-in";
+    authError = null;
     attachCloudSync(user);
   } else {
     currentUser = null;
@@ -297,6 +304,7 @@ function renderAuthScreen() {
         <div class="card-title">Sincronizá tus tareas</div>
         <div class="empty-hint">Iniciá sesión con tu cuenta de Google para ver tus tareas, objetivos y personas en todos tus dispositivos.</div>
         <button class="add-btn" onclick="signInWithGoogle()">Ingresar con Google</button>
+        ${authError ? `<div class="warn-hint" style="color:#A63A3A; margin-top:10px;">Error: ${esc(authError)}</div>` : ""}
       </section>
     </div>`;
 }
