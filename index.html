@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Mi Productividad</title>
+<link rel="manifest" href="../manifest.json" />
+<link rel="apple-touch-icon" href="../icon-192.png" />
+<meta name="theme-color" content="#2F5D50" />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap');
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Inter', sans-serif; background: #ECEAE3; color: #22291F; padding-bottom: 40px; }
+  input, textarea, select, button { font-family: 'Inter', sans-serif; }
+  ::placeholder { color: #9A9A8E; }
+  button { cursor: pointer; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; padding: 20px 18px 12px; }
+  .eyebrow { font-size: 12px; color: #8A8A7E; margin-bottom: 2px; }
+  .headline { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 500; text-transform: capitalize; }
+  .save-dot { width: 8px; height: 8px; border-radius: 99px; margin-top: 8px; background: #2F5D50; }
+  .tabs { display: flex; gap: 6px; padding: 0 18px 14px; flex-wrap: wrap; }
+  .tab { border: none; background: transparent; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 500; color: #8A8A7E; }
+  .tab.active { background: #22291F; color: #fff; }
+  .body { padding: 0 18px; display: flex; flex-direction: column; gap: 14px; max-width: 720px; margin: 0 auto; }
+  .summary-row { display: flex; gap: 10px; }
+  .pill { flex: 1; background: #fff; border-radius: 12px; padding: 10px 8px; text-align: center; }
+  .pill-num { font-family: 'Fraunces', serif; font-size: 20px; color: #2F5D50; }
+  .pill-total { font-size: 13px; color: #B3ADA0; }
+  .pill-label { font-size: 11px; color: #8A8A7E; margin-top: 2px; }
+  .card { background: #fff; border-radius: 14px; padding: 16px; }
+  .card-title { font-size: 14px; font-weight: 600; margin-bottom: 10px; }
+  .group-title { font-size: 13px; font-weight: 600; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.3px; }
+  .empty-hint { font-size: 13px; color: #8A8A7E; margin-bottom: 10px; line-height: 1.4; }
+  .empty-hint-small { font-size: 12px; color: #B3ADA0; }
+  .warn-hint { font-size: 12px; color: #A6763E; margin-top: 8px; }
+  .task-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+  .task-text { flex: 1; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+  .strike { text-decoration: line-through; color: #B3ADA0; }
+  .checkbox { width: 20px; height: 20px; border-radius: 6px; border: 1.5px solid #C9C6BA; background: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .checkbox.done { background: #2F5D50; border-color: #2F5D50; color: #fff; font-size: 12px; }
+  .icon-btn { border: none; background: transparent; padding: 4px; color: #B3ADA0; }
+  .inline-add { display: flex; gap: 8px; align-items: center; }
+  .input { flex: 1; border: 1px solid #E2E0D6; border-radius: 10px; padding: 10px 12px; font-size: 14px; background: #FAFAF6; outline: none; width: 100%; }
+  .date-input { border: 1px solid #E2E0D6; border-radius: 10px; padding: 8px 10px; font-size: 13px; background: #FAFAF6; outline: none; }
+  .add-btn-small { border: none; background: #2F5D50; border-radius: 10px; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fff; font-size: 18px; }
+  .add-btn { border: none; background: #2F5D50; color: #fff; border-radius: 10px; padding: 8px 14px; font-size: 13px; font-weight: 600; }
+  .icon-btn-circle { border: 1px solid #E2E0D6; background: #fff; border-radius: 99px; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .icon-btn-circle.active { background: #A63A3A; border-color: #A63A3A; color: #fff; }
+  .task-form { display: flex; flex-direction: column; gap: 10px; }
+  .task-form-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .tag-picker { display: flex; gap: 6px; }
+  .tag-chip { border: none; border-radius: 20px; padding: 7px 12px; font-size: 12px; font-weight: 600; }
+  .objective-toggle { display: flex; align-items: center; gap: 4px; border: none; border-radius: 20px; padding: 7px 12px; font-size: 12px; font-weight: 600; background: #F2EFE3; color: #8A7A2E; }
+  .objective-toggle.active { background: #8A7A2E; color: #fff; }
+  .filter-row { display: flex; gap: 8px; }
+  .filter-chip { border: 1px solid #D8D5C8; background: transparent; border-radius: 20px; padding: 6px 12px; font-size: 12px; color: #6E6E63; font-weight: 500; }
+  .filter-chip.active { background: #22291F; color: #fff; border-color: #22291F; }
+  .tag-badge { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px; flex-shrink: 0; }
+  .notes-area { width: 100%; min-height: 60px; border: 1px solid #E2E0D6; border-radius: 10px; padding: 10px; font-size: 13px; background: #FAFAF6; margin-bottom: 8px; outline: none; resize: vertical; }
+  .due-date-row { display: flex; align-items: center; gap: 6px; padding-left: 30px; padding-bottom: 6px; flex-wrap: wrap; }
+  .due-date-label { font-size: 11px; color: #B3ADA0; }
+  .due-date-input-small { border: 1px solid #E2E0D6; border-radius: 8px; padding: 3px 6px; font-size: 12px; background: #FAFAF6; outline: none; }
+  .date-changed-hint { font-size: 11px; color: #A6763E; }
+  .people-toggle-btn { display: flex; align-items: center; gap: 4px; border: none; background: transparent; font-size: 11px; color: #8A8A7E; margin-left: auto; }
+  .people-panel { display: flex; flex-wrap: wrap; gap: 6px; padding-left: 30px; padding-bottom: 8px; }
+  .people-picker-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 2px; }
+  .person-chip { border: none; border-radius: 20px; padding: 5px 10px; font-size: 12px; font-weight: 500; background: #F2F1EB; color: #4A4A40; }
+  .person-chip.active { background: #22291F; color: #fff; }
+  .person-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid #F0EFE9; }
+  .person-avatar { width: 32px; height: 32px; border-radius: 99px; background: #DFE7EE; color: #35577A; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; flex-shrink: 0; }
+  .person-name { font-size: 14px; font-weight: 500; margin-bottom: 3px; }
+  .person-email-input { width: 100%; border: 1px solid #E2E0D6; border-radius: 8px; padding: 5px 8px; font-size: 12px; background: #FAFAF6; outline: none; }
+  .distraction-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid #F0EFE9; }
+  .distraction-time { font-size: 11px; color: #B3ADA0; flex-shrink: 0; width: 40px; }
+  .distraction-text { flex: 1; font-size: 13px; color: #4A4A40; }
+  .cal-header { display: flex; align-items: center; justify-content: space-between; }
+  .cal-nav-btn { border: 1px solid #E2E0D6; background: #fff; border-radius: 99px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
+  .cal-month-label { font-family: 'Fraunces', serif; font-size: 17px; text-transform: capitalize; }
+  .cal-week-row { display: grid; grid-template-columns: repeat(7, 1fr); margin-top: 10px; }
+  .cal-weekday { text-align: center; font-size: 11px; color: #B3ADA0; font-weight: 600; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-cell-empty { aspect-ratio: 1; }
+  .cal-cell { aspect-ratio: 1; border: none; background: #fff; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 4px; }
+  .cal-cell.today { border: 1.5px solid #2F5D50; }
+  .cal-cell.selected { background: #2F5D50; color: #fff; }
+  .cal-dots { display: flex; gap: 2px; }
+  .cal-dot { width: 4px; height: 4px; border-radius: 99px; }
+  .history-row { display: flex; align-items: flex-start; gap: 8px; padding: 8px 0; border-top: 1px solid #F0EFE9; }
+  .history-text { font-size: 13px; color: #4A4A40; }
+  .history-meta { font-size: 11px; color: #B3ADA0; margin-top: 2px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+// ---------- estado y persistencia (localStorage, propio del dispositivo/navegador) ----------
+const STORAGE_KEY = "mica-productividad-v1";
+const TAGS = {
+  personal: { label: "Personal", color: "#B4623A", bg: "#F5E6DC" },
+  laboral: { label: "Laboral", color: "#35577A", bg: "#DFE7EE" },
+};
+const EMPTY_STATE = { tasks: [], distractions: [], people: [] };
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return { ...EMPTY_STATE };
+    return { ...EMPTY_STATE, ...JSON.parse(raw) };
+  } catch (e) {
+    return { ...EMPTY_STATE };
+  }
+}
+let state = loadState();
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+let ui = {
+  view: "hoy",
+  filterTag: "todos",
+  calY: new Date().getFullYear(),
+  calM: new Date().getMonth(),
+  calSelected: null,
+  openNotesFor: null,
+  openPeopleFor: null,
+  newTask: "",
+  newTag: "laboral",
+  newDue: todayKey(),
+  newIsObjective: false,
+  newTaskPeople: [],
+  newDistraction: "",
+  newPersonName: "",
+  newPersonEmail: "",
+  listening: null,
+};
+
+// ---------- helpers ----------
+function todayKey(d = new Date()) {
+  const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, "0"), day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+function fmtLong(dateKey) {
+  const [y, m, d] = dateKey.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" });
+}
+function uid() { return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); }
+function esc(s) { return (s || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+
+const dateKey = todayKey();
+
+// ---------- acciones ----------
+function addTask() {
+  const text = ui.newTask.trim();
+  if (!text) return;
+  state.tasks.unshift({
+    id: uid(), text, tag: ui.newTag, isObjective: ui.newIsObjective,
+    dueDate: ui.newDue || null, originalDueDate: ui.newDue || null,
+    notes: "", peopleIds: ui.newTaskPeople, done: false,
+    createdAt: new Date().toISOString(), completedAt: null,
+  });
+  save();
+  ui.newTask = ""; ui.newIsObjective = false; ui.newTaskPeople = [];
+  render();
+}
+function toggleTaskDone(id) {
+  const t = state.tasks.find((x) => x.id === id);
+  t.done = !t.done;
+  t.completedAt = t.done ? new Date().toISOString() : null;
+  save(); render();
+}
+function deleteTask(id) { state.tasks = state.tasks.filter((t) => t.id !== id); save(); render(); }
+function updateTaskNotes(id, notes) { state.tasks.find((t) => t.id === id).notes = notes; save(); }
+function updateTaskDueDate(id, val) { state.tasks.find((t) => t.id === id).dueDate = val || null; save(); render(); }
+function toggleTaskPerson(id, pid) {
+  const t = state.tasks.find((x) => x.id === id);
+  t.peopleIds = t.peopleIds || [];
+  t.peopleIds = t.peopleIds.includes(pid) ? t.peopleIds.filter((x) => x !== pid) : [...t.peopleIds, pid];
+  save(); render();
+}
+function addDistraction() {
+  const text = ui.newDistraction.trim();
+  if (!text) return;
+  state.distractions.unshift({ id: uid(), text, dateKey, time: new Date().toISOString() });
+  save(); ui.newDistraction = ""; render();
+}
+function deleteDistraction(id) { state.distractions = state.distractions.filter((d) => d.id !== id); save(); render(); }
+function addPerson() {
+  const name = ui.newPersonName.trim();
+  if (!name) return;
+  state.people.push({ id: uid(), name, email: ui.newPersonEmail.trim() });
+  save(); ui.newPersonName = ""; ui.newPersonEmail = ""; render();
+}
+function updatePersonEmail(id, email) { state.people.find((p) => p.id === id).email = email; save(); }
+function deletePerson(id) {
+  state.people = state.people.filter((p) => p.id !== id);
+  state.tasks.forEach((t) => { t.peopleIds = (t.peopleIds || []).filter((pid) => pid !== id); });
+  save(); render();
+}
+
+// ---------- dictado por voz (mejor esfuerzo; depende del navegador) ----------
+let recognition = null;
+function startListening(target) {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { alert("Tu navegador no soporta dictado por voz."); return; }
+  recognition = new SR();
+  recognition.lang = "es-AR";
+  recognition.interimResults = false;
+  recognition.onresult = (e) => {
+    const text = e.results[0][0].transcript;
+    if (target === "task") ui.newTask = ui.newTask ? ui.newTask + " " + text : text;
+    if (target === "distraction") ui.newDistraction = ui.newDistraction ? ui.newDistraction + " " + text : text;
+    render();
+  };
+  recognition.onerror = () => { ui.listening = null; render(); };
+  recognition.onend = () => { ui.listening = null; render(); };
+  ui.listening = target;
+  recognition.start();
+  render();
+}
+function stopListening() { if (recognition) recognition.stop(); ui.listening = null; render(); }
+
+// ---------- render ----------
+function render() {
+  const allTasks = state.tasks;
+  const objectivesToday = allTasks.filter((t) => t.isObjective && t.dueDate === dateKey);
+  const pendingObjectivesToday = objectivesToday.filter((t) => !t.done);
+  const pendingToday = allTasks.filter((t) => !t.isObjective && !t.done && (t.dueDate === dateKey || !t.dueDate));
+  const overdue = allTasks.filter((t) => !t.isObjective && !t.done && t.dueDate && t.dueDate < dateKey);
+  const upcoming = allTasks.filter((t) => !t.isObjective && !t.done && t.dueDate && t.dueDate > dateKey);
+  const doneToday = allTasks.filter((t) => !t.isObjective && t.done && t.completedAt && t.completedAt.slice(0, 10) === dateKey);
+  const todaysDistractions = state.distractions.filter((d) => d.dateKey === dateKey);
+
+  function applyFilter(list) { return ui.filterTag === "todos" ? list : list.filter((t) => t.tag === ui.filterTag); }
+
+  function taskRow(t) {
+    const dateChanged = t.originalDueDate && t.dueDate && t.originalDueDate !== t.dueDate;
+    const assigned = state.people.filter((p) => (t.peopleIds || []).includes(p.id));
+    return `
+      <div>
+        <div class="task-row">
+          <button class="checkbox ${t.done ? "done" : ""}" onclick="toggleTaskDone('${t.id}')">${t.done ? "✓" : ""}</button>
+          <span class="task-text ${t.done ? "strike" : ""}" onclick="ui.openNotesFor = ui.openNotesFor==='${t.id}'?null:'${t.id}'; render();">
+            ${t.isObjective ? "☀️ " : ""}${esc(t.text)}
+          </span>
+          <span class="tag-badge" style="background:${TAGS[t.tag].bg};color:${TAGS[t.tag].color}">${TAGS[t.tag].label}</span>
+          <button class="icon-btn" onclick="deleteTask('${t.id}')">🗑</button>
+        </div>
+        <div class="due-date-row">
+          <span class="due-date-label">Vence:</span>
+          <input type="date" class="due-date-input-small" value="${t.dueDate || ""}" onchange="updateTaskDueDate('${t.id}', this.value)" />
+          ${dateChanged ? `<span class="date-changed-hint">original: ${t.originalDueDate}</span>` : ""}
+          <button class="people-toggle-btn" onclick="ui.openPeopleFor = ui.openPeopleFor==='${t.id}'?null:'${t.id}'; render();">
+            👤 ${assigned.length ? esc(assigned.map((p) => p.name).join(", ")) : "Personas"}
+          </button>
+        </div>
+        ${ui.openPeopleFor === t.id ? `
+          <div class="people-panel">
+            ${state.people.length === 0 ? `<span class="empty-hint-small">Cargá personas en la pestaña "Personas".</span>` : ""}
+            ${state.people.map((p) => `<button class="person-chip ${(t.peopleIds||[]).includes(p.id) ? "active" : ""}" onclick="toggleTaskPerson('${t.id}','${p.id}')">${esc(p.name)}</button>`).join("")}
+          </div>` : ""}
+        ${ui.openNotesFor === t.id ? `<textarea class="notes-area" placeholder="Agregar una nota…" onchange="updateTaskNotes('${t.id}', this.value)">${esc(t.notes)}</textarea>` : ""}
+      </div>`;
+  }
+
+  function taskGroup(title, accent, tasks, emptyText) {
+    if (tasks.length === 0 && !emptyText) return "";
+    return `
+      <section class="card">
+        <div class="group-title" style="color:${accent}">${title}</div>
+        ${tasks.length === 0 ? `<div class="empty-hint">${emptyText}</div>` : ""}
+        ${tasks.map(taskRow).join("")}
+      </section>`;
+  }
+
+  let bodyHtml = "";
+
+  if (ui.view === "hoy") {
+    bodyHtml = `
+      <div class="summary-row">
+        <div class="pill"><div class="pill-num">${objectivesToday.filter((o) => o.done).length}<span class="pill-total">/${objectivesToday.length}</span></div><div class="pill-label">objetivos</div></div>
+        <div class="pill"><div class="pill-num">${doneToday.length}<span class="pill-total">/${doneToday.length + pendingToday.length}</span></div><div class="pill-label">tareas</div></div>
+        <div class="pill"><div class="pill-num">${todaysDistractions.length}</div><div class="pill-label">distracciones</div></div>
+      </div>
+
+      <section class="card">
+        <div class="card-title">Nueva tarea</div>
+        <div class="task-form">
+          <div class="inline-add">
+            <input class="input" placeholder="¿Qué hay que hacer?" value="${esc(ui.newTask)}"
+              oninput="ui.newTask=this.value" onkeydown="if(event.key==='Enter'){addTask()}" />
+            <button class="icon-btn-circle ${ui.listening === "task" ? "active" : ""}" onclick="${ui.listening === "task" ? "stopListening()" : "startListening('task')"}">🎙</button>
+          </div>
+          <div class="task-form-row">
+            <div class="tag-picker">
+              ${Object.entries(TAGS).map(([k, t]) => `<button class="tag-chip" style="background:${ui.newTag===k?t.color:t.bg};color:${ui.newTag===k?"#fff":t.color}" onclick="ui.newTag='${k}';render()">${t.label}</button>`).join("")}
+            </div>
+            <button class="objective-toggle ${ui.newIsObjective ? "active" : ""}" onclick="ui.newIsObjective=!ui.newIsObjective;render()">☀️ Objetivo de hoy</button>
+            <input type="date" class="date-input" value="${ui.newDue}" onchange="ui.newDue=this.value" />
+            <button class="add-btn" onclick="addTask()">Agregar</button>
+          </div>
+          ${state.people.length > 0 ? `
+            <div class="people-picker-row">
+              👥 ${state.people.map((p) => `<button class="person-chip ${ui.newTaskPeople.includes(p.id)?"active":""}" onclick="ui.newTaskPeople=ui.newTaskPeople.includes('${p.id}')?ui.newTaskPeople.filter(x=>x!=='${p.id}'):[...ui.newTaskPeople,'${p.id}'];render()">${esc(p.name)}</button>`).join("")}
+            </div>` : `<div class="empty-hint-small">Todavía no cargaste personas. Andá a la pestaña "Personas".</div>`}
+        </div>
+      </section>
+
+      <div class="filter-row">
+        ${["todos", "personal", "laboral"].map((f) => `<button class="filter-chip ${ui.filterTag===f?"active":""}" onclick="ui.filterTag='${f}';render()">${f==="todos"?"Todas":TAGS[f].label}</button>`).join("")}
+      </div>
+
+      ${taskGroup("Objetivos de hoy", "#8A7A2E", applyFilter(pendingObjectivesToday), "Todavía no cargaste objetivos para hoy.")}
+      ${applyFilter(overdue).length > 0 ? taskGroup("Vencidas", "#A63A3A", applyFilter(overdue)) : ""}
+      ${taskGroup("Para hoy", "#2F5D50", applyFilter(pendingToday), "No tenés tareas pendientes para hoy.")}
+      ${applyFilter(upcoming).length > 0 ? taskGroup("Próximas", "#8A8A7E", applyFilter(upcoming)) : ""}
+
+      <section class="card">
+        <div class="card-title">¿Qué te sacó de tu eje hoy?</div>
+        <div class="empty-hint">Anotá o dictá lo que interrumpió tu foco.</div>
+        <div class="inline-add">
+          <input class="input" placeholder="Ej: Llamado imprevisto de un proveedor" value="${esc(ui.newDistraction)}"
+            oninput="ui.newDistraction=this.value" onkeydown="if(event.key==='Enter'){addDistraction()}" />
+          <button class="icon-btn-circle ${ui.listening === "distraction" ? "active" : ""}" onclick="${ui.listening === "distraction" ? "stopListening()" : "startListening('distraction')"}">🎙</button>
+          <button class="add-btn-small" onclick="addDistraction()">+</button>
+        </div>
+        ${todaysDistractions.map((d) => `
+          <div class="distraction-row">
+            <span class="distraction-time">${new Date(d.time).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}</span>
+            <span class="distraction-text">${esc(d.text)}</span>
+            <button class="icon-btn" onclick="deleteDistraction('${d.id}')">✕</button>
+          </div>`).join("")}
+      </section>
+    `;
+  }
+
+  if (ui.view === "calendario") {
+    const firstOfMonth = new Date(ui.calY, ui.calM, 1);
+    const startWeekday = firstOfMonth.getDay();
+    const daysInMonth = new Date(ui.calY, ui.calM + 1, 0).getDate();
+    let cells = "";
+    for (let i = 0; i < startWeekday; i++) cells += `<div class="cal-cell-empty"></div>`;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const key = `${ui.calY}-${String(ui.calM + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      const dayTasks = allTasks.filter((t) => t.dueDate === key);
+      const isToday = key === dateKey, isSelected = ui.calSelected === key;
+      cells += `<button class="cal-cell ${isToday ? "today" : ""} ${isSelected ? "selected" : ""}" onclick="ui.calSelected=ui.calSelected==='${key}'?null:'${key}';render()">
+        <span>${d}</span>
+        <div class="cal-dots">${dayTasks.slice(0, 3).map((t) => `<span class="cal-dot" style="background:${TAGS[t.tag].color};opacity:${t.done ? 0.35 : 1}"></span>`).join("")}</div>
+      </button>`;
+    }
+    const selectedTasks = ui.calSelected ? allTasks.filter((t) => t.dueDate === ui.calSelected) : [];
+    bodyHtml = `
+      <div class="cal-header">
+        <button class="cal-nav-btn" onclick="if(ui.calM===0){ui.calM=11;ui.calY--}else{ui.calM--} ui.calSelected=null;render()">‹</button>
+        <div class="cal-month-label">${firstOfMonth.toLocaleDateString("es-AR", { month: "long", year: "numeric" })}</div>
+        <button class="cal-nav-btn" onclick="if(ui.calM===11){ui.calM=0;ui.calY++}else{ui.calM++} ui.calSelected=null;render()">›</button>
+      </div>
+      <div class="cal-week-row">${["D","L","M","M","J","V","S"].map((d) => `<div class="cal-weekday">${d}</div>`).join("")}</div>
+      <div class="cal-grid">${cells}</div>
+      ${ui.calSelected ? `
+        <section class="card">
+          <div class="card-title">${fmtLong(ui.calSelected)}</div>
+          ${selectedTasks.length === 0 ? `<div class="empty-hint">No hay tareas para este día.</div>` : selectedTasks.map((t) => `
+            <div class="task-row">
+              <button class="checkbox ${t.done?"done":""}" onclick="toggleTaskDone('${t.id}')">${t.done?"✓":""}</button>
+              <span class="task-text ${t.done?"strike":""}">${esc(t.text)}</span>
+              <span class="tag-badge" style="background:${TAGS[t.tag].bg};color:${TAGS[t.tag].color}">${TAGS[t.tag].label}</span>
+            </div>`).join("")}
+        </section>` : ""}
+    `;
+  }
+
+  if (ui.view === "historial") {
+    const doneAll = allTasks.filter((t) => t.done).sort((a, b) => (b.completedAt || "").localeCompare(a.completedAt || ""));
+    const groups = {};
+    doneAll.forEach((t) => {
+      const key = (t.completedAt || "").slice(0, 10) || "sin-fecha";
+      (groups[key] = groups[key] || []).push(t);
+    });
+    if (Object.keys(groups).length === 0) {
+      bodyHtml = `<div class="empty-hint">Todavía no completaste tareas.</div>`;
+    } else {
+      bodyHtml = Object.entries(groups).map(([day, tasks]) => `
+        <section class="card">
+          <div class="card-title">${day === "sin-fecha" ? "Sin fecha" : fmtLong(day)}</div>
+          ${tasks.map((t) => {
+            const closedAt = (t.completedAt || "").slice(0, 10);
+            const orig = t.originalDueDate;
+            let deltaHtml = "";
+            if (orig && closedAt) {
+              const diff = Math.round((new Date(closedAt) - new Date(orig)) / 86400000);
+              const d = diff === 0 ? {t:"en término",c:"#2F5D50"} : diff > 0 ? {t:`${diff} día${diff>1?"s":""} tarde`,c:"#A63A3A"} : {t:`${Math.abs(diff)} día${Math.abs(diff)>1?"s":""} antes`,c:"#3E6E67"};
+              deltaHtml = ` · <span style="color:${d.c};font-weight:600">${d.t}</span>`;
+            }
+            return `
+              <div class="history-row">
+                <span>✓</span>
+                <div style="flex:1">
+                  <div class="history-text">${t.isObjective ? "☀️ " : ""}${esc(t.text)}</div>
+                  ${orig ? `<div class="history-meta">Vencía: ${orig} · Cerrada: ${closedAt}${deltaHtml}</div>` : ""}
+                </div>
+                <span class="tag-badge" style="background:${TAGS[t.tag].bg};color:${TAGS[t.tag].color}">${TAGS[t.tag].label}</span>
+              </div>`;
+          }).join("")}
+        </section>`).join("");
+    }
+  }
+
+  if (ui.view === "personas") {
+    bodyHtml = `
+      <section class="card">
+        <div class="card-title">Nueva persona</div>
+        <div class="task-form">
+          <input class="input" placeholder="Nombre" value="${esc(ui.newPersonName)}" oninput="ui.newPersonName=this.value" />
+          <div class="inline-add">
+            <input class="input" placeholder="Mail (opcional)" value="${esc(ui.newPersonEmail)}"
+              oninput="ui.newPersonEmail=this.value" onkeydown="if(event.key==='Enter'){addPerson()}" />
+            <button class="add-btn-small" onclick="addPerson()">+</button>
+          </div>
+        </div>
+      </section>
+      <section class="card">
+        <div class="card-title">Tus personas</div>
+        ${state.people.length === 0 ? `<div class="empty-hint">Todavía no cargaste a nadie.</div>` : ""}
+        ${state.people.map((p) => `
+          <div class="person-row">
+            <div class="person-avatar">${esc(p.name.charAt(0).toUpperCase())}</div>
+            <div style="flex:1">
+              <div class="person-name">${esc(p.name)}</div>
+              <input class="person-email-input" value="${esc(p.email)}" placeholder="agregar mail…" onchange="updatePersonEmail('${p.id}', this.value)" />
+            </div>
+            <button class="icon-btn" onclick="deletePerson('${p.id}')">🗑</button>
+          </div>`).join("")}
+      </section>
+    `;
+  }
+
+  document.getElementById("app").innerHTML = `
+    <div class="header">
+      <div>
+        <div class="eyebrow">Micaela</div>
+        <div class="headline">Hoy, ${fmtLong(dateKey)}</div>
+      </div>
+      <div class="save-dot"></div>
+    </div>
+    <nav class="tabs">
+      ${[["hoy","Hoy"],["calendario","Calendario"],["historial","Histórico"],["personas","Personas"]].map(([id,label]) => `<button class="tab ${ui.view===id?"active":""}" onclick="ui.view='${id}';render()">${label}</button>`).join("")}
+    </nav>
+    <div class="body">${bodyHtml}</div>
+  `;
+}
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+}
+
+render();
+</script>
+</body>
+</html>
