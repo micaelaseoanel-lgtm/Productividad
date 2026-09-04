@@ -93,8 +93,11 @@
 <body>
 <div id="app"></div>
 
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script>
-// ---------- estado y persistencia (localStorage, propio del dispositivo/navegador) ----------
+// ---------- estado y persistencia (localStorage = caché local; Firestore = fuente de verdad entre dispositivos) ----------
 const STORAGE_KEY = "mica-productividad-v1";
 const TAGS = {
   personal: { label: "Personal", color: "#B4623A", bg: "#F5E6DC" },
@@ -114,7 +117,64 @@ function loadState() {
 let state = loadState();
 function save() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  if (currentUser) {
+    db.collection("users").doc(currentUser.uid).set(state)
+      .catch((e) => console.error("Error guardando en la nube:", e));
+  }
 }
+
+// ---------- sincronización con Firebase (cuenta de Google + Firestore) ----------
+const firebaseConfig = {
+  apiKey: "AIzaSyCQKmhLaU8oY9iRtWKB8WMptJF3eqTG5wo",
+  authDomain: "mi-productividad-c8cf2.firebaseapp.com",
+  projectId: "mi-productividad-c8cf2",
+  storageBucket: "mi-productividad-c8cf2.firebasestorage.app",
+  messagingSenderId: "797671408664",
+  appId: "1:797671408664:web:c23e4fe0f71e331d8caf6d",
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+try { db.enablePersistence({ synchronizeTabs: true }).catch(() => {}); } catch (e) {}
+
+let authState = "loading"; // loading | signed-out | signed-in
+let currentUser = null;
+let unsubscribeSnapshot = null;
+
+function signInWithGoogle() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithRedirect(provider);
+}
+function signOut() {
+  if (unsubscribeSnapshot) { unsubscribeSnapshot(); unsubscribeSnapshot = null; }
+  auth.signOut();
+}
+function attachCloudSync(user) {
+  const ref = db.collection("users").doc(user.uid);
+  unsubscribeSnapshot = ref.onSnapshot((doc) => {
+    if (doc.exists) {
+      state = { ...EMPTY_STATE, ...doc.data() };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } else {
+      // primer login de esta cuenta: subimos lo que haya guardado localmente en este dispositivo
+      ref.set(state).catch((e) => console.error("Error creando datos en la nube:", e));
+    }
+    render();
+  }, (err) => console.error("Error de sincronización:", err));
+}
+auth.getRedirectResult().catch((err) => console.error("Error de login:", err));
+auth.onAuthStateChanged((user) => {
+  if (user) {
+    currentUser = user;
+    authState = "signed-in";
+    attachCloudSync(user);
+  } else {
+    currentUser = null;
+    authState = "signed-out";
+    if (unsubscribeSnapshot) { unsubscribeSnapshot(); unsubscribeSnapshot = null; }
+  }
+  render();
+});
 
 let ui = {
   view: "hoy",
@@ -221,7 +281,31 @@ function startListening(target) {
 function stopListening() { if (recognition) recognition.stop(); ui.listening = null; render(); }
 
 // ---------- render ----------
+function renderAuthScreen() {
+  if (authState === "loading") {
+    return `<div class="body"><section class="card"><div class="empty-hint">Cargando…</div></section></div>`;
+  }
+  return `
+    <div class="header">
+      <div>
+        <div class="eyebrow">Mi Productividad</div>
+        <div class="headline">Iniciar sesión</div>
+      </div>
+    </div>
+    <div class="body">
+      <section class="card">
+        <div class="card-title">Sincronizá tus tareas</div>
+        <div class="empty-hint">Iniciá sesión con tu cuenta de Google para ver tus tareas, objetivos y personas en todos tus dispositivos.</div>
+        <button class="add-btn" onclick="signInWithGoogle()">Ingresar con Google</button>
+      </section>
+    </div>`;
+}
+
 function render() {
+  if (authState !== "signed-in") {
+    document.getElementById("app").innerHTML = renderAuthScreen();
+    return;
+  }
   const allTasks = state.tasks;
   const objectivesToday = allTasks.filter((t) => t.isObjective && t.dueDate === dateKey);
   const pendingObjectivesToday = objectivesToday.filter((t) => !t.done);
@@ -442,7 +526,10 @@ function render() {
         <div class="eyebrow">Micaela</div>
         <div class="headline">Hoy, ${fmtLong(dateKey)}</div>
       </div>
-      <div class="save-dot"></div>
+      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+        <div class="save-dot"></div>
+        <button class="icon-btn" style="font-size:11px; padding:0;" onclick="signOut()">Salir</button>
+      </div>
     </div>
     <nav class="tabs">
       ${[["hoy","Hoy"],["calendario","Calendario"],["historial","Histórico"],["personas","Personas"]].map(([id,label]) => `<button class="tab ${ui.view===id?"active":""}" onclick="ui.view='${id}';render()">${label}</button>`).join("")}
@@ -455,7 +542,7 @@ if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
 }
 
-render();
+render(); // pantalla de carga inicial; onAuthStateChanged vuelve a llamar render() cuando resuelve
 </script>
 </body>
 </html>
